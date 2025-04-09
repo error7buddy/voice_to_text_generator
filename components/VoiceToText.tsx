@@ -19,6 +19,25 @@ const VoiceToText = () => {
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = "en-US";
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setTranscript((prevTranscript) => prevTranscript + " " + finalTranscript);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        setError(`Error occurred: ${event.error}`);
+        setListening(false);
+      };
+    } else {
+      setError("Speech recognition is not supported in this browser. Please use Google Chrome.");
     }
   }, []); // Empty dependency array ensures this runs only once after mount
 
@@ -36,25 +55,6 @@ const VoiceToText = () => {
       // Start listening
       recognition.start();
       setListening(true);
-      recognition.onresult = (event: any) => {
-        let finalTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          // Only get the final transcript
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-
-        // Append the final transcript to the existing transcript
-        if (finalTranscript) {
-          setTranscript(prevTranscript => prevTranscript + " " + finalTranscript);
-        }
-      };
-
-      recognition.onerror = (event: any) => {
-        setError(`Error occurred: ${event.error}`);
-        setListening(false);
-      };
     }
   };
 
